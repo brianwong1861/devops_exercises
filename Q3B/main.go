@@ -67,15 +67,15 @@ func (p *Record) GenerateShortURL(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(record)
 	
 }
-func (p *Record) RateLimiting(w http.ResponseWriter, r *http.Request) bool {
+func RateLimiting(w http.ResponseWriter, r *http.Request) bool {
 
-	ipAddr_trimmed := strings.Split(r.RemoteAddr, ":")[0]
+	ipAddr_trimmed := strings.Split(r.RemoteAddr, ":")[0] //Split Remote IP ADDR into IP and Port
 	// message = make(map[string]string)
 
 	if ( record.IPAddr == "" ) && ( record.StartTime == 0 ) {
 		record.IPAddr = ipAddr_trimmed
 		record.StartTime = time.Now().Unix()
-	} else if ( time.Now().Unix() - record.StartTime ) < 5 {
+	} else if ( time.Now().Unix() - record.StartTime ) <= 5 {
 		w.Write([]byte("Exceeded rate limit\n"))
 		record.StartTime = time.Now().Unix() 
 		return false
@@ -86,7 +86,7 @@ func (p *Record) RateLimiting(w http.ResponseWriter, r *http.Request) bool {
 
 func rateLimitingMiddleware(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		val := record.RateLimiting(w, r)
+		val := RateLimiting(w, r)
 		if val == true {
 			next.ServeHTTP(w, r)
 		}
@@ -110,10 +110,6 @@ func main() {
 	r.HandleFunc("/all", record.GetAllOriginalURL).Methods("GET")
 	r.HandleFunc("/{urlhash:[a-zA-Z0-9]{8}}", record.GetOriginalURL).Methods("GET")
 	r.HandleFunc("/submit", record.GenerateShortURL).Methods("POST")
-	
-	
-	// r.HandleFunc("/", record.RateLimiting).Methods("GET")
-	
 	
 	srv := &http.Server{
 		Handler: r,

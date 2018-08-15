@@ -1,4 +1,4 @@
-package randstring
+package utils
 
 import (
         "time"
