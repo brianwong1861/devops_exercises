@@ -4,7 +4,6 @@ import (
         "time"
         _ "fmt"
         "math/rand"
-
 )
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
@@ -20,3 +19,6 @@ func RandStringBytes(n int) string {
         }
         return string(b)
 }
+
+
+

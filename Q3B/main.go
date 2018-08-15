@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"os"
 	"fmt"
 	"encoding/json"
@@ -22,8 +21,6 @@ const urlPrefix string = "http://shorturl.com/"
 type Record struct {
 	URL string `json:"url"`
 	ShortenURL string `json:"shorten_url"`
-	StartTime int64 `json:"start_time"`
-	IPAddr string `json:"ip_addr"`
 }
 
 
@@ -44,12 +41,15 @@ func (p *Record ) GetOriginalURL(w http.ResponseWriter, r *http.Request) {
 	var results []Record	
 	vars := mux.Vars(r)
 	req_url := urlPrefix + vars["urlhash"] 
-	w.Header().Set("Content-Type", "application/json")
-	for _, v := range urllist {
-		if req_url == v.ShortenURL {
-			results = append(results, v)
-		} 
+	if len(urllist) == 0 {
+		w.Write([]byte("Not found this mapping domain"))
+		return 
 	}
+	for _, v := range urllist {
+			if req_url == v.ShortenURL {
+				results = append(results, v)
+			} 
+		}
 	site := "http://" + results[0].URL
 	http.Redirect(w, r, site, 301)
 	
@@ -67,33 +67,6 @@ func (p *Record) GenerateShortURL(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(record)
 	
 }
-func RateLimiting(w http.ResponseWriter, r *http.Request) bool {
-
-	ipAddr_trimmed := strings.Split(r.RemoteAddr, ":")[0] //Split Remote IP ADDR into IP and Port
-	// message = make(map[string]string)
-
-	if ( record.IPAddr == "" ) && ( record.StartTime == 0 ) {
-		record.IPAddr = ipAddr_trimmed
-		record.StartTime = time.Now().Unix()
-	} else if ( time.Now().Unix() - record.StartTime ) <= 5 {
-		w.Write([]byte("Exceeded rate limit\n"))
-		record.StartTime = time.Now().Unix() 
-		return false
-	}
-	record.StartTime = time.Now().Unix() 
-	return true
-}
-
-func rateLimitingMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		val := RateLimiting(w, r)
-		if val == true {
-			next.ServeHTTP(w, r)
-		}
-        // Call the next handler, which can be another middleware in the chain, or the final handler.
-    })
-}
-
 func init(){
 	_ = godotenv.Load(".env")
 }
@@ -106,7 +79,7 @@ func main() {
 	r := mux.NewRouter()
 	// Attach an elegant path with handler
 
-	r.Use(rateLimitingMiddleware)
+	r.Use(rs.RateLimitingMiddleware)
 	r.HandleFunc("/all", record.GetAllOriginalURL).Methods("GET")
 	r.HandleFunc("/{urlhash:[a-zA-Z0-9]{8}}", record.GetOriginalURL).Methods("GET")
 	r.HandleFunc("/submit", record.GenerateShortURL).Methods("POST")
