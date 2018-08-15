@@ -4,8 +4,12 @@ import (
         "time"
         _ "fmt"
         "strings"
-        "net/http"
+		"net/http"
+		"os"
+		"strconv"
 )
+
+var threshold int64
 
 type RemoteIP struct {
 	StartTime int64 `json:"start_time"`
@@ -14,14 +18,15 @@ type RemoteIP struct {
 var remoteIP RemoteIP
 
 func (p *RemoteIP) RateLimiting(w http.ResponseWriter, r *http.Request) bool {
-
 	ipAddrTrimmed := strings.Split(r.RemoteAddr, ":")[0] //Split Remote IP ADDR into IP and Port
 	// message = make(map[string]string)
+	s1, _ := strconv.Atoi(os.Getenv("RATE_LIMITE_THRESHOLD"))
+	threshold := int64(s1)
 
 	if ( remoteIP.IPAddr == "" ) && ( remoteIP.StartTime == 0 ) {
 		remoteIP.IPAddr = ipAddrTrimmed
 		remoteIP.StartTime = time.Now().Unix()
-	} else if ( time.Now().Unix() - remoteIP.StartTime ) <= 5 {
+	} else if ( time.Now().Unix() - remoteIP.StartTime ) <= threshold {
 		w.Write([]byte("Exceeded rate limit\n"))
 		remoteIP.StartTime = time.Now().Unix() 
 		return false
