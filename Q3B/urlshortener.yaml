@@ -1,0 +1,61 @@
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: urlshortener
+  labels:
+    app: urlshortener
+    chart: urlshortener-0.1.0
+    release: urlshortener
+    heritage: Tiller
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: urlshortener
+    release: urlshortener
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: urlshortener
+  labels:
+    app: urlshortener
+    chart: urlshortener-0.1.0
+    release: urlshortener
+    heritage: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: urlshortener
+      release: urlshortener
+  template:
+    metadata:
+      labels:
+        app: urlshortener
+        release: urlshortener
+    spec:
+      containers:
+        - name: urlshortener
+          image: "brianwong1861/urlshorten:v1"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /all
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /all
+              port: http
+          resources:
+            {}
