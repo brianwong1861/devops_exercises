@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    
+</head>
+<body>
+    <form id="url_frm">
+        <input type="text" name="domain" value="eg. google.com">
+        <input type="submit" value="Submit">
+    </form>
+
+<script>
+    $(document).ready( ()=> {
+        
+    })
+    $('submit').click((e) => {
+        e.preventDefault();
+        var domainVal = $('input[domain]').val();
+        $.ajax({
+            url: '/submit',
+            data: { url: domainVal },
+            type: post,
+            success: (e) => {
+                console.log(e)
+            }
+        })
+        
+    })
+   
+
+</script>
+<script src="../static/jquery-3.3.1.js"></script>
+</body>
+</html>
