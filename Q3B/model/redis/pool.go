@@ -7,6 +7,8 @@ import (
 	"os"
 	"syscall"
 	"github.com/joho/godotenv"
+	
+	
 )
 
 var (
@@ -20,7 +22,13 @@ func init() {
 	if redisHost == "" {
 		redisHost = ":6379"
 	}
+	
 	Pool = newPool(redisHost)
+	// Redis initializing test 
+	err := Ping()
+	if err != nil {
+		panic("Redis initializing failed")
+	} 
 	cleanupHook()
 }
 
